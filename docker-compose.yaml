@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  liberty_test_task_api:
+    container_name: liberty_test_task_api
+    command: bash -c "python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/liberty_test_task/
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "256m"
+    depends_on:
+      - postgresql
+      - redis
+
+  postgresql:
+    image: postgres:13.4
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "256m"
+
+  redis:
+    image: "redis:alpine"
+    command: redis-server --maxmemory 2048mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "256m"
